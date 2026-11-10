@@ -69,29 +69,7 @@ const FROM_LANDING = (function () {
    takes over, autostart included, and it arms with a proper referrer and a
    visible countdown. A probe is exempt: it fires nothing and patches
    nothing. */
-const SENT_HOME = (function () {
-  const want = params.get("afterglow");
-  if (!want || want === "probe" || FROM_LANDING) return false;
-  try {
-    /* Pin the page to the .fail look: the message lives in #msg, which is
-       hidden in log mode, and the URL decides whether log mode is on. */
-    document.body.className = "fail";
-    const msgEl = document.getElementById("msg");
-    if (msgEl) {
-      msgEl.textContent =
-        "Restored by the browser. Nothing has been run -- " +
-        "going back to the start page.";
-    }
-  } catch (e) {}
-  /* replace(), not assign(): the refused page must not stay in the history,
-     or stepping back lands straight on it again. */
-  setTimeout(function () {
-    try {
-      location.replace("index.html");
-    } catch (e) {}
-  }, 1500);
-  return true;
-})();
+const SENT_HOME = false;
 
 const PROBE_MODE = params.get("probe") === "1";
 const STOP_BEFORE_DOUBLE = params.get("stop") === "beforedouble";
