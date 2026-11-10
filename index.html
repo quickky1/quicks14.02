@@ -297,7 +297,8 @@
         if (e.key === "Enter") attempt();
       });
 
-      input.focus();
+      /* public build: no access code / no overlay interaction */
+      attempt();
     })();
     </script>
   </body>
