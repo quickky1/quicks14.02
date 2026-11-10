@@ -7,4 +7,4 @@ This is a public static test copy of the Akatsuki host.
 - `kernel_1402.bin` is a real 14.02 kernel ELF, but the chain is still unverified.
 - Do not run this on a console you cannot recover. Prefer a disposable 14.00/14.02 console.
 
-Host URL: `https://quickky1.github.io/ps4-akatsuki-public/`
+Host URL: `https://quickky1.github.io/quicks14.02/`
