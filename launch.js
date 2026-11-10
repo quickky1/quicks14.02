@@ -10,6 +10,10 @@
   const COUNTDOWN_SEC = 5;
   const DEST = "launch.html?v=1402s&log=1&afterglow=run&mode=kpstep&g=drain:16&g=drainsz:0x4000";
 
+  /* public build: skip the launch/countdown screen entirely */
+  location.replace(DEST);
+  return;
+
   const countEl = document.getElementById("count"); // <p class="status" id="count">
   const content = document.querySelector(".content");
 
