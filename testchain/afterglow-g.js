@@ -2449,6 +2449,51 @@ async function attempt(ctx, opts) {
   iface.queues = shot.queues;
   if (ctx.state) ctx.state.afterglow = iface;
 
+  /* Staged, yielding kernel scan. The caller passes the base int64 halves and
+     a 4 MiB stage offset. Only matches and progress are logged; the 4 KiB
+     chunk is dropped every iteration so memory never grows. */
+  window.__AG_IFACE = iface;
+  window.__AG_SCAN = async function (lo, hi, stageOff, stageSize) {
+    const start = v(lo >>> 0, hi >>> 0).add32(stageOff >>> 0);
+    const pats = [
+      { name: "ELF", b: Uint8Array.from([0x7f, 0x45, 0x4c, 0x46]) },
+      { name: "MZ", b: Uint8Array.from([0x4d, 0x5a]) },
+      { name: "FreeBSD", b: Uint8Array.from("FreeBSD", c => c.charCodeAt(0)) },
+      { name: "SceKernel", b: Uint8Array.from("SceKernel", c => c.charCodeAt(0)) },
+      { name: "GoldHEN", b: Uint8Array.from("GoldHEN", c => c.charCodeAt(0)) },
+      { name: "FakePKG", b: Uint8Array.from("FakePKG", c => c.charCodeAt(0)) },
+    ];
+    say("[scan] stage @" + text(start) + " size 0x" + stageSize.toString(16));
+    let ok = 0, bad = 0, hits = 0;
+    for (let off = 0; off < stageSize; off += 0x1000) {
+      const at = plus(start, off);
+      const d = iface.read(at, 0x1000);
+      if (!d) { bad++; }
+      else {
+        ok++;
+        for (let p = 0; p < pats.length; p++) {
+          const pat = pats[p].b;
+          for (let i = 0; i + pat.length <= d.length; i++) {
+            let eq = true;
+            for (let j = 0; j < pat.length; j++) {
+              if (d[i + j] !== pat[j]) { eq = false; break; }
+            }
+            if (eq) {
+              hits++;
+              say("[scan] hit " + pats[p].name + " @ " + text(plus(at, i)));
+            }
+          }
+        }
+      }
+      if ((off & 0xfffff) === 0) {
+        say("[scan] " + (off / 0x100000) + " MiB ok=" + ok + " bad=" + bad + " hits=" + hits);
+        await new Promise(r => setTimeout(r, 30));
+      }
+    }
+    say("[scan] stage done ok=" + ok + " bad=" + bad + " hits=" + hits);
+    return { ok, bad, hits };
+  };
+
   say("[10] kernel interface is live -- " + shot.devs.length + " handles held open");
 
   /* straight away, not on request: in this host the process can die at any

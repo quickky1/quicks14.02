@@ -176,6 +176,28 @@
         letter-spacing: 0.08em;
       }
       #sendLog:active { background: #1f3a2a; }
+      #scanPanel {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        z-index: 1000;
+        display: none;
+        gap: 8px;
+        padding: 8px;
+        background: #080a0c;
+        border: 1px solid #7fd0a0;
+        color: #c8ced8;
+        font: 12px/1.3 var(--mono);
+      }
+      #scanPanel button {
+        padding: 7px 10px;
+        background: #111;
+        color: #7fd0a0;
+        border: 1px solid #7fd0a0;
+        border-radius: 3px;
+        font: 700 11px/1 var(--mono);
+      }
+      #scanPanel button:disabled { opacity: 0.4; }
     </style>
   </head>
   <body>
@@ -188,6 +210,11 @@
       <div id="out"></div>
     </div>
     <p class="byline">by well0nez/m0zz</p>
+    <div id="scanPanel">
+      <span id="scanStage">scan: waiting for kernel</span>
+      <button id="scanStart" disabled>START</button>
+      <button id="scanNext" disabled>NEXT</button>
+    </div>
     <button id="sendLog">SEND LOG</button>
     <script type="module">
       import "./jb-g.js?v=1402zh6";
@@ -206,6 +233,58 @@
             document.getElementById("sendLog").textContent = "FAILED";
           });
       });
+
+      (function () {
+        var params = new URLSearchParams(location.search);
+        if (params.get("scan") !== "1") return;
+        var panel = document.getElementById("scanPanel");
+        var stageEl = document.getElementById("scanStage");
+        var startBtn = document.getElementById("scanStart");
+        var nextBtn = document.getElementById("scanNext");
+        var stage = 0, STEP = 0x400000, MAX = 12, busy = false;
+        panel.style.display = "flex";
+
+        function ready() {
+          return window.__AG_SCAN && window.__AG_IFACE && window.__AG_IFACE.base;
+        }
+
+        function update() {
+          stageEl.textContent = "scan stage " + (stage + 1) + "/" + MAX +
+            " @" + (stage * STEP / 0x100000) + " MiB";
+          startBtn.disabled = busy || stage >= MAX;
+          nextBtn.disabled = busy || stage >= MAX;
+        }
+
+        async function run() {
+          if (busy || stage >= MAX) return;
+          if (!ready()) {
+            stageEl.textContent = "scan: waiting for kernel";
+            return;
+          }
+          busy = true; update();
+          var b = window.__AG_IFACE.base;
+          try {
+            await window.__AG_SCAN(b.low, b.hi, stage * STEP, STEP);
+          } catch (e) {
+            stageEl.textContent = "scan error: " + (e && e.message ? e.message : e);
+          }
+          busy = false;
+          stage++;
+          update();
+        }
+
+        startBtn.addEventListener("click", run);
+        nextBtn.addEventListener("click", run);
+        var wait = setInterval(function () {
+          if (ready()) {
+            clearInterval(wait);
+            startBtn.disabled = false;
+            nextBtn.disabled = false;
+            update();
+          }
+        }, 500);
+        update();
+      })();
     </script>
   </body>
 </html>
