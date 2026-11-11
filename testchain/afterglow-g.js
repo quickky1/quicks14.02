@@ -2458,6 +2458,23 @@ async function attempt(ctx, opts) {
       ? "handles defused -- this page may close"
       : "the handles are NOT defused -- do not let this page close");
 
+  /* Free the WebKit-side spray/primitive buffers before the payload loader.
+     On a fresh refresh these are gone; on the first run they are still held
+     and can starve the GoldHEN thread. The kernel handles are already defused,
+     so these JS references are no longer needed. */
+  try {
+    var ka = ctx.keepAlive;
+    if (ka) {
+      var nka = ka.length;
+      ka.length = 0;
+      say("[m] cleared " + nka + " keepAlive buffers before payload");
+    }
+  } catch (e) {}
+  try {
+    if (iface.devs) iface.devs.length = 0;
+    if (iface.queues) iface.queues.length = 0;
+  } catch (e) {}
+
   const want = (ctx.params && ctx.params.get("payload"));
   const mode = (ctx.params && ctx.params.get("mode")) || "";
   if (mode === "kpstep") {
