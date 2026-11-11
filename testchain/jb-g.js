@@ -1,4 +1,4 @@
-import { establishPrimitive } from "./core.js?v=1402";
+﻿import { establishPrimitive } from "./core.js?v=1402";
 import { installWindowP, pairStatus } from "./mem.js?v=1402";
 import { int64 } from "./int64.js?v=1402";
 import { offsetsFor, PS4 } from "./ps4_offsets.js?v=1402";
@@ -56,7 +56,7 @@ const FROM_LANDING = (function () {
     const here = location.pathname.replace(/[^/]*$/, "");
     if (cameFrom !== here) return false;
     const file = r.pathname.slice(cameFrom.length);
-    return file === "" || file === "index.html" || /^go(-[a-z0-9]+)?\.html$/.test(file);
+    return file === "" || file === "index.html";
   } catch (e) {
     return false;
   }
@@ -69,29 +69,7 @@ const FROM_LANDING = (function () {
    takes over, autostart included, and it arms with a proper referrer and a
    visible countdown. A probe is exempt: it fires nothing and patches
    nothing. */
-const SENT_HOME = (function () {
-  const want = params.get("afterglow");
-  if (!want || want === "probe" || FROM_LANDING) return false;
-  try {
-    /* Pin the page to the .fail look: the message lives in #msg, which is
-       hidden in log mode, and the URL decides whether log mode is on. */
-    document.body.className = "fail";
-    const msgEl = document.getElementById("msg");
-    if (msgEl) {
-      msgEl.textContent =
-        "Restored by the browser. Nothing has been run -- " +
-        "going back to the start page.";
-    }
-  } catch (e) {}
-  /* replace(), not assign(): the refused page must not stay in the history,
-     or stepping back lands straight on it again. */
-  setTimeout(function () {
-    try {
-      location.replace("index.html");
-    } catch (e) {}
-  }, 1500);
-  return true;
-})();
+const SENT_HOME = false;
 
 const PROBE_MODE = params.get("probe") === "1";
 const STOP_BEFORE_DOUBLE = params.get("stop") === "beforedouble";
@@ -239,6 +217,13 @@ function mark(tag, detail) {
   lastMark = Date.now();
   const raw = detail;
   detail = terse(detail);
+
+  try {
+    fetch("ag_log?m=" + encodeURIComponent(tag + " " + (detail == null ? "" : detail)), {
+      cache: "no-store",
+      keepalive: true,
+    }).catch(function () {});
+  } catch (e) {}
 
   lines.push(
     tag +
@@ -1011,7 +996,7 @@ let allDone = false,
          (afterglow=probe) fires no trigger and patches nothing, so a restored
          page may run that. */
       try {
-        const ag = await import("./afterglow-g.js?v=1402zh");
+        const ag = await import("./afterglow-g.js?v=1402s5");
         // Exactly what afterglow reaches for, counted rather than guessed.
         const agCtx = {
           p: p, callAddr: callAddr, bufAddr: bufAddr, errno: errno,
