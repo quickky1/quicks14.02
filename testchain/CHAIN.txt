@@ -1,0 +1,30 @@
+afterglow 14.02 chain - working snapshot 2026-11-11
+==================================================
+Cache version : 1402zh
+State         : kernel exploit WORKS on 14.02 (uid 0, kernel R/W, 15/15 patches,
+                handles defused, console stays alive). Debug Settings patch lands:
+                last clean run printed "debug menu enabled" and CHAIN COMPLETE.
+                HEN/GoldHEN services (9090/2121) still under bisect.
+
+One armed run per boot. Full power cycle between attempts - a reload says
+"this kernel is already open / Not firing again".
+
+Entry pages
+  go-k.html    kernel only, no payload
+  go-tt3.html  thread-context proof (marker written by the payload, read back)
+  go-i1.html   HEN installer init #1 only, then spin (SURVIVED on hardware)
+  go-i2.html   HEN installer init #1+#2, then spin (bisect step)
+  go-pr.html   yush libPS4 pthread create/join probe, output captured to a buffer
+  go-g.html    goldhen-1402.bin via pthread loader (dies after thread start)
+  go-gc.html   clean loader run (no hardcoded patches)
+  others: go-gb, go-gd, go-ge, go-p, go-z, go-tt, go-tt2
+
+Payloads
+  goldhen-1402.bin  291,925 B  ported GoldHEN, 14.02 table (loader verified)
+  thread-probe.bin  yush probe build, md5 49e9129976f0b734a64030346e585986
+  thread-test.bin   16 KB marker write + spin
+  hen-init1.bin / hen-init2.bin  installer bisect stubs
+
+patchset.bin : 14.02, md5 ef106363b8d9836e4dc03601bc42e720
+site         : serve from this folder, python3 server.py (port 1337,
+               Cache-Control: no-store, /ag_log answers 200, log in serve.log)
