@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -162,6 +162,20 @@
       code {
         color: #9fb3d0;
       }
+      #sendLog {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 1000;
+        padding: 8px 14px;
+        background: #111;
+        color: #7fd0a0;
+        border: 1px solid #7fd0a0;
+        border-radius: 4px;
+        font: 700 12px/1 var(--mono);
+        letter-spacing: 0.08em;
+      }
+      #sendLog:active { background: #1f3a2a; }
     </style>
   </head>
   <body>
@@ -174,8 +188,24 @@
       <div id="out"></div>
     </div>
     <p class="byline">by well0nez/m0zz</p>
+    <button id="sendLog">SEND LOG</button>
     <script type="module">
       import "./jb-g.js?v=1402zh6";
+    </script>
+    <script>
+      document.getElementById("sendLog").addEventListener("click", function () {
+        var out = document.getElementById("out");
+        var text = out ? out.textContent : "";
+        if (!text) text = "(no log lines captured)";
+        fetch("ag_log", { method: "POST", body: text, cache: "no-store" })
+          .then(function (r) {
+            document.getElementById("sendLog").textContent =
+              r.ok ? "SENT" : "FAILED " + r.status;
+          })
+          .catch(function () {
+            document.getElementById("sendLog").textContent = "FAILED";
+          });
+      });
     </script>
   </body>
 </html>
